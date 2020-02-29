@@ -1,10 +1,14 @@
 ;;;; srfi-7.lisp
 
-(cl:in-package :srfi-7-internal)
+(cl:in-package "https://github.com/g000001/srfi-7#internals")
 
-(def-suite srfi-7)
 
-(in-suite srfi-7)
+(define-syntax eval-always
+  (syntax-rules ()
+    ((_ body ***)
+     (eval-when (:compile-toplevel :load-toplevel :execute)
+       body ***))))
+
 
 (define-syntax program
   (syntax-rules (requires files systems code feature-cond)
@@ -12,21 +16,29 @@
      (progn))
     ((program (requires feature-id ***)
               more ***)
-     (progn (cond-expand ((and feature-id ***) :okay))
-            (program more ***)))
+     (eval-always
+       (cond-expand ((and feature-id ***) :okay))
+       (program more ***)))
     ((program (files filename ***)
               more ***)
-     (progn (load filename) ***
-            (program more ***)))
+     (eval-always
+       (load filename) ***
+       (program more ***)))
     ((program (systems systemname ***)
               more ***)
-     (progn (asdf:load-system systemname) ***
-            (program more ***)))
+     (eval-always
+       (asdf:load-system systemname) ***
+       (program more ***)))
     ((program (code stuff ***)
               more ***)
-     (progn stuff ***
-            (program more ***)))
+     (eval-always
+       stuff ***
+       (program more ***)))
     ((program (feature-cond (requirement stuff ***) ***)
               more ***)
-     (progn (cond-expand (requirement (program stuff ***)) ***)
-            (program more ***)))))
+     (eval-always
+       (cond-expand (requirement (program stuff ***)) ***)
+       (program more ***)))))
+
+
+;;; *EOF*
